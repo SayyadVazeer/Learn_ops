@@ -1,12 +1,16 @@
 import os
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, render_template, request
 
 
 def create_app():
     app = Flask(__name__)
     tasks = []
     next_task_id = 1
+
+    @app.get("/")
+    def home():
+        return render_template("index.html")
 
     @app.get("/health")
     def health():

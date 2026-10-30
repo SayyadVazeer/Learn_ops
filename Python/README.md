@@ -15,10 +15,14 @@ python app.py
 The server listens on port `8000` by default. Set the `PORT` environment
 variable to use another port.
 
+Open [http://localhost:8000](http://localhost:8000) for the API guide and
+example requests.
+
 ## Endpoints
 
 | Method | Path | Description |
 | --- | --- | --- |
+| `GET` | `/` | Show the API guide |
 | `GET` | `/health` | Check that the service is running |
 | `GET` | `/tasks` | List tasks |
 | `POST` | `/tasks` | Create a task |

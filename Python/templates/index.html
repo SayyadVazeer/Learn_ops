@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Task API Guide</title>
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: "Segoe UI", sans-serif;
+            color: #172033;
+            background: #f3f6fb;
+        }
+
+        body {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header, .endpoint, .note {
+            background: #fff;
+            border: 1px solid #dce3ee;
+            border-radius: 12px;
+            padding: 22px;
+            margin-bottom: 16px;
+        }
+
+        h1, h2, p {
+            margin-top: 0;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+        }
+
+        .endpoint h2 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.15rem;
+        }
+
+        .method {
+            display: inline-block;
+            min-width: 65px;
+            padding: 5px 8px;
+            border-radius: 6px;
+            background: #e8efff;
+            color: #214eaa;
+            font-size: .8rem;
+            text-align: center;
+        }
+
+        code, pre {
+            font-family: Consolas, monospace;
+        }
+
+        pre {
+            overflow-x: auto;
+            padding: 14px;
+            border-radius: 8px;
+            background: #f3f6fb;
+        }
+
+        .muted {
+            color: #586579;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Task API</h1>
+        <p class="muted">A small API for practicing Python and Docker.</p>
+        <p>Use the endpoints below to check the service and manage tasks. Examples use <code>curl.exe</code> in PowerShell.</p>
+    </header>
+
+    <main>
+        <section class="endpoint">
+            <h2><span class="method">GET</span><code>/health</code></h2>
+            <p>Check whether the service is running. No request body is needed.</p>
+            <pre><code>curl.exe http://localhost:8000/health</code></pre>
+            <p>Success response (<code>200</code>):</p>
+            <pre><code>{"status":"ok"}</code></pre>
+        </section>
+
+        <section class="endpoint">
+            <h2><span class="method">GET</span><code>/tasks</code></h2>
+            <p>Get all tasks. A new task list is empty until you create a task.</p>
+            <pre><code>curl.exe http://localhost:8000/tasks</code></pre>
+            <p>Success response (<code>200</code>):</p>
+            <pre><code>[{"id":1,"title":"Learn Docker","completed":false}]</code></pre>
+        </section>
+
+        <section class="endpoint">
+            <h2><span class="method">POST</span><code>/tasks</code></h2>
+            <p>Create a task by sending a JSON object with a non-empty <code>title</code>.</p>
+            <pre><code>curl.exe -X POST http://localhost:8000/tasks `
+  -H "Content-Type: application/json" `
+  -d '{\"title\":\"Learn Docker\"}'</code></pre>
+            <p>Success response (<code>201</code>) includes the new task. Missing or blank titles return <code>400</code>.</p>
+            <pre><code>{"id":1,"title":"Learn Docker","completed":false}</code></pre>
+        </section>
+
+        <section class="endpoint">
+            <h2><span class="method">DELETE</span><code>/tasks/&lt;id&gt;</code></h2>
+            <p>Delete a task by its numeric ID. Replace <code>1</code> with the ID you want to delete.</p>
+            <pre><code>curl.exe -X DELETE http://localhost:8000/tasks/1</code></pre>
+            <p>Success response is <code>204</code> with no body. An ID that does not exist returns <code>404</code>.</p>
+        </section>
+
+        <aside class="note">
+            <strong>Note:</strong> Tasks are stored in memory and will be cleared when the app restarts.
+        </aside>
+    </main>
+</body>
+</html>

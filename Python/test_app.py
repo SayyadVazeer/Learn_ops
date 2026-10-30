@@ -7,6 +7,16 @@ class TaskApiTests(unittest.TestCase):
     def setUp(self):
         self.client = create_app().test_client()
 
+    def test_home_documents_all_endpoints(self):
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Task API", response.data)
+        for endpoint in ("/health", "/tasks", "/tasks/&lt;id&gt;"):
+            self.assertIn(endpoint.encode(), response.data)
+        for method in (b"GET", b"POST", b"DELETE"):
+            self.assertIn(method, response.data)
+
     def test_health(self):
         response = self.client.get("/health")
 
