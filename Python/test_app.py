@@ -11,7 +11,10 @@ class TaskApiTests(unittest.TestCase):
         response = self.client.get("/")
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Task API", response.data)
+        self.assertIn(b"Task Manager", response.data)
+        self.assertIn(b'id="task-form"', response.data)
+        self.assertIn(b'id="task-list"', response.data)
+        self.assertIn(b'fetch("/tasks"', response.data)
         for endpoint in ("/health", "/tasks", "/tasks/&lt;id&gt;"):
             self.assertIn(endpoint.encode(), response.data)
         for method in (b"GET", b"POST", b"DELETE"):

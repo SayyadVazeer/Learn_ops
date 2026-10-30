@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Task API Guide</title>
+    <title>Task Manager</title>
     <style>
         :root {
             color-scheme: light;
@@ -18,7 +18,7 @@
             padding: 40px 20px;
         }
 
-        header, .endpoint, .note {
+        header, .panel, .endpoint, .note {
             background: #fff;
             border: 1px solid #dce3ee;
             border-radius: 12px;
@@ -34,22 +34,92 @@
             margin-bottom: 8px;
         }
 
-        .endpoint h2 {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        h2 {
             font-size: 1.15rem;
         }
 
-        .method {
-            display: inline-block;
-            min-width: 65px;
-            padding: 5px 8px;
-            border-radius: 6px;
-            background: #e8efff;
-            color: #214eaa;
-            font-size: .8rem;
-            text-align: center;
+        .muted {
+            color: #586579;
+        }
+
+        form {
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            min-width: 0;
+            padding: 11px 12px;
+            border: 1px solid #c8d1df;
+            border-radius: 7px;
+            font: inherit;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: 0;
+            border-radius: 7px;
+            background: #2457c5;
+            color: #fff;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1948aa;
+        }
+
+        button:disabled {
+            cursor: wait;
+            opacity: .6;
+        }
+
+        .task-list {
+            display: grid;
+            gap: 10px;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+
+        .task {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 12px 14px;
+            border: 1px solid #e1e7f0;
+            border-radius: 8px;
+        }
+
+        .task-title {
+            overflow-wrap: anywhere;
+        }
+
+        .task-id {
+            margin-right: 8px;
+            color: #657187;
+            font-size: .85rem;
+        }
+
+        .delete-button {
+            flex: none;
+            background: #a83232;
+        }
+
+        .delete-button:hover {
+            background: #842626;
+        }
+
+        #message {
+            min-height: 1.4em;
+            margin: 12px 0 0;
+        }
+
+        #message.error {
+            color: #a83232;
         }
 
         code, pre {
@@ -63,55 +133,181 @@
             background: #f3f6fb;
         }
 
-        .muted {
-            color: #586579;
+        .method {
+            display: inline-block;
+            min-width: 65px;
+            padding: 5px 8px;
+            margin-right: 8px;
+            border-radius: 6px;
+            background: #e8efff;
+            color: #214eaa;
+            font-size: .8rem;
+            text-align: center;
+        }
+
+        @media (max-width: 520px) {
+            body {
+                padding: 20px 12px;
+            }
+
+            form {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>Task API</h1>
-        <p class="muted">A small API for practicing Python and Docker.</p>
-        <p>Use the endpoints below to check the service and manage tasks. Examples use <code>curl.exe</code> in PowerShell.</p>
+        <h1>Task Manager</h1>
+        <p class="muted">Add tasks, see what is on your list, or remove tasks when you are done.</p>
+        <p>Tasks are kept in memory and will reset whenever the app restarts.</p>
     </header>
 
     <main>
-        <section class="endpoint">
-            <h2><span class="method">GET</span><code>/health</code></h2>
-            <p>Check whether the service is running. No request body is needed.</p>
-            <pre><code>curl.exe http://localhost:8000/health</code></pre>
-            <p>Success response (<code>200</code>):</p>
-            <pre><code>{"status":"ok"}</code></pre>
+        <section class="panel" aria-labelledby="add-task-heading">
+            <h2 id="add-task-heading">Add a task</h2>
+            <form id="task-form">
+                <label for="task-title" hidden>Task title</label>
+                <input id="task-title" name="title" type="text" maxlength="200"
+                       placeholder="For example: Learn Docker volumes" required>
+                <button id="add-button" type="submit">Add task</button>
+            </form>
+            <p id="message" role="status" aria-live="polite"></p>
         </section>
 
-        <section class="endpoint">
-            <h2><span class="method">GET</span><code>/tasks</code></h2>
-            <p>Get all tasks. A new task list is empty until you create a task.</p>
-            <pre><code>curl.exe http://localhost:8000/tasks</code></pre>
-            <p>Success response (<code>200</code>):</p>
-            <pre><code>[{"id":1,"title":"Learn Docker","completed":false}]</code></pre>
+        <section class="panel" aria-labelledby="tasks-heading">
+            <h2 id="tasks-heading">Your tasks</h2>
+            <ul id="task-list" class="task-list" aria-live="polite"></ul>
         </section>
 
-        <section class="endpoint">
-            <h2><span class="method">POST</span><code>/tasks</code></h2>
-            <p>Create a task by sending a JSON object with a non-empty <code>title</code>.</p>
-            <pre><code>curl.exe -X POST http://localhost:8000/tasks `
+        <section class="panel" aria-labelledby="api-heading">
+            <h2 id="api-heading">API guide</h2>
+            <p>The page uses these same endpoints, which you can also try with <code>curl.exe</code> in PowerShell.</p>
+
+            <article class="endpoint">
+                <h3><span class="method">GET</span><code>/health</code></h3>
+                <p>Check that the service is running.</p>
+                <pre><code>curl.exe http://localhost:8000/health</code></pre>
+                <p>Returns <code>200</code>: <code>{"status":"ok"}</code></p>
+            </article>
+
+            <article class="endpoint">
+                <h3><span class="method">GET</span><code>/tasks</code></h3>
+                <p>List all tasks.</p>
+                <pre><code>curl.exe http://localhost:8000/tasks</code></pre>
+            </article>
+
+            <article class="endpoint">
+                <h3><span class="method">POST</span><code>/tasks</code></h3>
+                <p>Create a task with a non-empty title. Missing or blank titles return <code>400</code>.</p>
+                <pre><code>curl.exe -X POST http://localhost:8000/tasks `
   -H "Content-Type: application/json" `
   -d '{\"title\":\"Learn Docker\"}'</code></pre>
-            <p>Success response (<code>201</code>) includes the new task. Missing or blank titles return <code>400</code>.</p>
-            <pre><code>{"id":1,"title":"Learn Docker","completed":false}</code></pre>
-        </section>
+            </article>
 
-        <section class="endpoint">
-            <h2><span class="method">DELETE</span><code>/tasks/&lt;id&gt;</code></h2>
-            <p>Delete a task by its numeric ID. Replace <code>1</code> with the ID you want to delete.</p>
-            <pre><code>curl.exe -X DELETE http://localhost:8000/tasks/1</code></pre>
-            <p>Success response is <code>204</code> with no body. An ID that does not exist returns <code>404</code>.</p>
+            <article class="endpoint">
+                <h3><span class="method">DELETE</span><code>/tasks/&lt;id&gt;</code></h3>
+                <p>Delete a task by its numeric ID. A missing ID returns <code>404</code>.</p>
+                <pre><code>curl.exe -X DELETE http://localhost:8000/tasks/1</code></pre>
+            </article>
         </section>
-
-        <aside class="note">
-            <strong>Note:</strong> Tasks are stored in memory and will be cleared when the app restarts.
-        </aside>
     </main>
+
+    <script>
+        const taskForm = document.querySelector("#task-form");
+        const taskTitle = document.querySelector("#task-title");
+        const addButton = document.querySelector("#add-button");
+        const taskList = document.querySelector("#task-list");
+        const message = document.querySelector("#message");
+
+        function showMessage(text, isError = false) {
+            message.textContent = text;
+            message.classList.toggle("error", isError);
+        }
+
+        async function loadTasks() {
+            const response = await fetch("/tasks");
+            if (!response.ok) {
+                throw new Error(`Could not load tasks (HTTP ${response.status}).`);
+            }
+
+            const tasks = await response.json();
+            taskList.replaceChildren();
+
+            if (tasks.length === 0) {
+                const emptyItem = document.createElement("li");
+                emptyItem.className = "muted";
+                emptyItem.textContent = "No tasks yet. Add one above to get started.";
+                taskList.append(emptyItem);
+                return;
+            }
+
+            for (const task of tasks) {
+                const item = document.createElement("li");
+                item.className = "task";
+
+                const title = document.createElement("span");
+                title.className = "task-title";
+                const id = document.createElement("span");
+                id.className = "task-id";
+                id.textContent = `#${task.id}`;
+                title.append(id, document.createTextNode(task.title));
+
+                const deleteButton = document.createElement("button");
+                deleteButton.className = "delete-button";
+                deleteButton.type = "button";
+                deleteButton.textContent = "Delete";
+                deleteButton.setAttribute("aria-label", `Delete task ${task.title}`);
+                deleteButton.addEventListener("click", () => deleteTask(task.id));
+
+                item.append(title, deleteButton);
+                taskList.append(item);
+            }
+        }
+
+        async function deleteTask(taskId) {
+            showMessage("");
+            try {
+                const response = await fetch(`/tasks/${taskId}`, { method: "DELETE" });
+                if (!response.ok) {
+                    throw new Error(`Could not delete task (HTTP ${response.status}).`);
+                }
+
+                showMessage("Task deleted.");
+                await loadTasks();
+            } catch (error) {
+                showMessage(error.message, true);
+            }
+        }
+
+        taskForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            showMessage("");
+            addButton.disabled = true;
+
+            try {
+                const response = await fetch("/tasks", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ title: taskTitle.value })
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || `Could not add task (HTTP ${response.status}).`);
+                }
+
+                taskForm.reset();
+                showMessage("Task added.");
+                await loadTasks();
+                taskTitle.focus();
+            } catch (error) {
+                showMessage(error.message, true);
+            } finally {
+                addButton.disabled = false;
+            }
+        });
+
+        loadTasks().catch((error) => showMessage(error.message, true));
+    </script>
 </body>
 </html>
